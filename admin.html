@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin - Inscriptions</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Admin - FF Tournois</h1>
+    <nav><a href="/">Retour</a></nav>
+  </header>
+  <main class="container">
+    <h3>Inscriptions</h3>
+
+    <div style="margin-bottom:1rem">
+      <label>Clé admin: <input type="password" id="adminKey" placeholder="X-API-KEY" style="width:220px"></label>
+      <button id="btn-set-key" class="btn btn-ghost">Se connecter</button>
+      <button id="btn-logout" class="btn btn-ghost">Se déconnecter</button>
+    </div>
+
+    <div>
+      <button id="btn-export" class="btn">Exporter CSV</button>
+      <button id="btn-clear" class="btn btn-ghost">Vider toutes</button>
+    </div>
+    <table id="regs" class="table" style="margin-top:1rem">
+      <thead><tr><th>ID</th><th>Tournoi</th><th>Équipe</th><th>Captain</th><th>Players</th><th>Contact</th><th>Date</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="admin-msg" class="msg"></div>
+  </main>
+  <script>
+    function $(s){return document.querySelector(s)}
+    function getKey(){return sessionStorage.getItem('admin_key')}
+    function setKey(k){ if(k) sessionStorage.setItem('admin_key',k); else sessionStorage.removeItem('admin_key') }
+
+    async function load(){
+      const key = getKey();
+      if(!key){ $('#admin-msg').textContent='Connecte-toi avec ta clé admin pour voir les inscriptions.'; return; }
+      $('#admin-msg').textContent='';
+      const res = await fetch('/api/registrations',{ headers: { 'x-api-key': key}});
+      if(!res.ok){ $('#admin-msg').textContent='Clé invalide ou erreur.'; return; }
+      const regs = await res.json();
+      const tb = $('#regs tbody'); tb.innerHTML='';
+      const tournamentsRes = await fetch('/api/tournaments');
+      const tournaments = await tournamentsRes.json();
+      regs.forEach(r=>{
+        const tr = document.createElement('tr');
+        const tname = (tournaments.find(t=>t.id===r.tournamentId)||{}).name || r.tournamentId;
+        tr.innerHTML = `<td>${r.id}</td><td>${tname}</td><td>${r.teamName}</td><td>${r.captain}</td><td>${r.players}</td><td>${r.contact}</td><td>${new Date(r.ts).toLocaleString()}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    $('#btn-set-key').addEventListener('click',()=>{
+      const k = $('#adminKey').value.trim(); if(!k) return; setKey(k); load(); $('#admin-msg').textContent='Connecté.';
+    });
+    $('#btn-logout').addEventListener('click',()=>{ setKey(null); $('#admin-msg').textContent='Déconnecté.'; $('#regs tbody').innerHTML=''; });
+
+    $('#btn-export').addEventListener('click',async ()=>{
+      const key = getKey(); if(!key){ $('#admin-msg').textContent='Pas connecté.'; return; }
+      const res = await fetch('/api/export',{ headers:{ 'x-api-key': key }});
+      if(!res.ok){ $('#admin-msg').textContent='Erreur export.'; return; }
+      const blob = await res.blob(); const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='inscriptions.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    $('#btn-clear').addEventListener('click',async ()=>{
+      const key = getKey(); if(!key){ $('#admin-msg').textContent='Pas connecté.'; return; }
+      if(!confirm('Vider toutes les inscriptions ?')) return;
+      const res = await fetch('/api/registrations',{ method:'DELETE', headers:{ 'x-api-key': key }});
+      if(!res.ok){ $('#admin-msg').textContent='Erreur suppression.'; return; }
+      $('#admin-msg').textContent='Inscriptions supprimées.'; load();
+    });
+
+    // Try to auto-load if key in session
+    if(getKey()) load();
+  </script>
+</body>
+</html>

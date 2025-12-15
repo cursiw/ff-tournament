@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tournois Free Fire</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>FF Tournois 🇫🇷</h1>
+    <nav>
+      <a href="#tournaments">Tournois</a>
+      <a href="#bracket">Bracket</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="hero" class="hero">
+      <h2>Participez aux meilleurs tournois Free Fire</h2>
+      <p>Inscrivez votre équipe, consultez les brackets et suivez les résultats.</p>
+    </section>
+
+    <section id="tournaments" class="container">
+      <h3>Tournois à venir</h3>
+      <div id="tournament-list" class="grid"></div>
+    </section>
+
+    <section id="bracket" class="container">
+      <h3>Exemple de bracket</h3>
+      <div id="bracket-view"></div>
+    </section>
+  </main>
+
+  <!-- Modal d'inscription -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="close-modal" class="close">✖</button>
+      <h3>S'inscrire au tournoi</h3>
+      <form id="reg-form">
+        <input type="hidden" id="tournamentId" />
+        <label>Nom d'équipe<input type="text" id="teamName" required></label>
+        <label>Captain<input type="text" id="captain" required></label>
+        <label>Nombre de joueurs<input type="number" id="players" min="1" max="5" value="4" required></label>
+        <label>Contact (Discord/WhatsApp)<input type="text" id="contact" required></label>
+        <label><input type="checkbox" id="agree" required> J'accepte le règlement</label>
+        <button type="submit">Valider l'inscription</button>
+      </form>
+      <div id="reg-msg" class="msg"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
